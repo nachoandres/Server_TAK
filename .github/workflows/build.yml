@@ -34,3 +34,34 @@ jobs:
             # Adds more detail to both client and server-side analysis logs, activating DEBUG mode for the scanner, and adding client-side environment variables and system properties to the server-side log of analysis report processing.
           # When you need the analysis to take place in a directory other than the one from which it was launched, default is .
           projectBaseDir: .
+
+  SCA:
+      needs: SAST
+      runs-on: ubuntu-24.04
+      steps:
+        
+        - name: Checkout code
+          uses: actions/checkout@v2
+
+        - name: Dependency Check
+          uses: dependency-check/Dependency-Check_Action@main
+          env:
+            JAVA_HOME: /opt/jdk
+          id: Depcheck
+          with: 
+            project: '${{ github.event.repository.name }}'
+            path: '.'
+            format: 'HTML'
+            #se ajusto a 5 el valor de failonCVSS para que falle cuando existen vulneraviliodaddes de dependencias medias, altas y criticas
+            #args: >
+             # --out ./reports
+             # --failOnCVSS 5 
+             # --enableRetired
+              
+        - name: Upload Test Result
+          uses: actions/upload-artifact@master
+          with: 
+            name: Depcheck Report
+            path: ./reports
+
+
