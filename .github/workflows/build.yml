@@ -44,7 +44,7 @@ jobs:
           uses: actions/checkout@v2
 
         - name: Dependency Check
-          uses: dependency-check/Dependency-Check_Action@1.1.0
+          uses: dependency-check/Dependency-Check_Action@master
           env:
             JAVA_HOME: /opt/jdk
           id: Depcheck
@@ -54,7 +54,7 @@ jobs:
             format: 'HTML'
             #se ajusto a 5 el valor de failonCVSS para que falle cuando existen vulneraviliodaddes de dependencias medias, altas y criticas
             args: 
-              -DyarnAuditAnalyzerEnabled=false 
+              -DyarnAuditAnalyzerEnabled=false \
              # --out ./reports
              # --failOnCVSS 5 
              # --enableRetired
