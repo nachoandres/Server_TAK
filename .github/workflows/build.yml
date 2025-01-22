@@ -54,7 +54,7 @@ jobs:
             format: 'HTML'
             #se ajusto a 5 el valor de failonCVSS para que falle cuando existen vulneraviliodaddes de dependencias medias, altas y criticas
             args: 
-              -DyarnAuditAnalyzerEnabled=false \
+              --disableYarnAudit
              # --out ./reports
              # --failOnCVSS 5 
              # --enableRetired
