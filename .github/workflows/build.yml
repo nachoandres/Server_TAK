@@ -1,20 +1,66 @@
-name: Build
+name: SonarCloud analysis
+
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+  
 jobs:
-  sonarqube:
-    name: SonarQube
-    runs-on: ubuntu-latest
+  SAST:
+    runs-on: ubuntu-24.04
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           
+      - name: Analyze with SonarCloud
+
+        # You can pin the exact commit or the version.
+        uses: SonarSource/sonarcloud-github-action@v2.2.0
+        # uses: SonarSource/sonarcloud-github-action@4006f663ecaf1f8093e8e4abb9227f6041f52216
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   # Generate a token on Sonarcloud.io, add it to the secrets of this repo with the name SONAR_TOKEN (Settings > Secrets > Actions > add new repository secret)
+        with:
+          # Additional arguments for the SonarScanner CLI
+          args:
+            -Dsonar.projectKey=nachoandres_Server_TAK
+            -Dsonar.organization=nachoandres
+            -Dsonar.verbose=true  # optional, default is false
+            
+            # Comma-separated paths to directories containing main source files.
+            #-Dsonar.sources=nachoandres_Server_TAK # optional, default is project base directory
+            # Comma-separated paths to directories containing test source files.
+            #-Dsonar.tests= # optional. For more info about Code Coverage, please refer to https://docs.sonarcloud.io/enriching/test-coverage/overview/
+            # Adds more detail to both client and server-side analysis logs, activating DEBUG mode for the scanner, and adding client-side environment variables and system properties to the server-side log of analysis report processing.
+          # When you need the analysis to take place in a directory other than the one from which it was launched, default is .
+          projectBaseDir: .
+
+  SCA:
+      needs: SAST
+      runs-on: ubuntu-24.04
+      steps:
+        
+        - name: Checkout code
+          uses: actions/checkout@v2
+
+        - name: Dependency Check
+          uses: dependency-check/Dependency-Check_Action@main
+          env:
+            JAVA_HOME: /opt/jdk
+          id: Depcheck
+          with: 
+            project: '${{ github.event.repository.name }}'
+            path: '.'
+            format: 'HTML'
+            #se ajusto a 5 el valor de failonCVSS para que falle cuando existen vulneraviliodaddes de dependencias medias, altas y criticas
+            args: 
+              --disableYarnAudit
+             # --out ./reports
+             # --failOnCVSS 5 
+             # --enableRetired
+              
+        - name: Upload Test Result
+          uses: actions/upload-artifact@master
+          with: 
+            name: Depcheck Report
+            path: ./reports
